@@ -15,13 +15,13 @@ unset($_SESSION['statusMsg']);
 
 // Check if the staffId is set in the session
 if (!isset($_SESSION['staffId'])) {
-    // If staffId is not set, redirect to the login page or show an error message
     header('Location: ../login_form.php'); // Redirect to login page
     exit(); // Stop further execution
 }
 
-// Assuming the staffId of the logged-in lecturer is stored in a session variable
-$staff_id = $_SESSION['staffId'];
+// Logged-in staff ID (same variable name as Dashboard.php)
+$staffId = $_SESSION['staffId'];
+
 // Check if the form is submitted
 if (isset($_POST['submit'])) {
     $sessionName = mysqli_real_escape_string($conn, $_POST['sessionName']);
@@ -48,11 +48,12 @@ if (isset($_POST['submit'])) {
 // Fetch the staff image
 $queryStaffImage = "SELECT image FROM staff WHERE staff_id = ?";
 $stmt = $conn->prepare($queryStaffImage);
-$stmt->bind_param('i', $staff_id);   // <-- was $staffId
+$stmt->bind_param('i', $staffId);
 $stmt->execute();
 $result = $stmt->get_result();
 $staffData = $result->fetch_assoc();
 
+// Set the path for the profile image
 $profileImagePath = '../php/images/' . ($staffData['image'] ?? 'default.png');
 ?>
 
@@ -162,93 +163,82 @@ $profileImagePath = '../php/images/' . ($staffData['image'] ?? 'default.png');
                 <input type="text" placeholder="Search here...">
             </div>
             <a href="changePassword.php">
-            <img src="<?php echo htmlspecialchars($profileImagePath); ?>" alt="Change Password">
-        </a>
+                <img src="<?php echo htmlspecialchars($profileImagePath); ?>" alt="Change Password">
+            </a>
         </div>
+
         <div class="dash-content">
-
-            <div id="right-panel" class="right-panel">
-                <header id="header" class="header">
-                    <div class="top">
-                        <i class="uil uil-bars sidebar-toggle"></i>
-                        <div class="search-box">
-                            <i class="uil uil-search"></i>
-                            <input type="text" placeholder="Search here...">
-                        </div>
-                        <img src="../images/1.jpg" alt="">
-                    </div>
-                </header>
-
-                <div class="content">
+            <!-- Duplicate header (with hardcoded ../images/1.jpg) removed: it was
+                 overlapping the real top bar and blocking the profile link. -->
+            <div class="content">
                 <div class="animated fadeIn">
-                        <div class="row">
-                            <div class="col-lg-12">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <strong class="card-title"><h2 align="center">Add New Session</h2></strong>
-                                    </div>
-                                    <div class="card-body">
-                                        <div id="pay-invoice">
-                                            <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <strong class="card-title"><h2 align="center">Add New Session</h2></strong>
+                                </div>
+                                <div class="card-body">
+                                    <div id="pay-invoice">
+                                        <div class="card-body">
                                             <div class="alert <?php echo isset($alertStyle) ? $alertStyle : 'alert-info'; ?>" role="alert">
                                                 <?php echo $statusMsg;?>
                                             </div>
-                                                <form method="POST" action="">
-                                                    <div class="row">
-                                                        <div class="col-6">
-                                                            <div class="form-group">
-                                                                <label for="sessionName" class="control-label mb-1">Session</label>
-                                                                <input id="sessionName" name="sessionName" type="text" class="form-control cc-exp" placeholder="Session Name">
-                                                            </div>
+                                            <form method="POST" action="">
+                                                <div class="row">
+                                                    <div class="col-6">
+                                                        <div class="form-group">
+                                                            <label for="sessionName" class="control-label mb-1">Session</label>
+                                                            <input id="sessionName" name="sessionName" type="text" class="form-control cc-exp" placeholder="Session Name">
                                                         </div>
                                                     </div>
-                                                    <div>
-                                                        <button type="submit" name="submit" class="btn btn-success">Add Session</button>
-                                                    </div>
-                                                </form>
-                                            </div>
+                                                </div>
+                                                <div>
+                                                    <button type="submit" name="submit" class="btn btn-success">Add Session</button>
+                                                </div>
+                                            </form>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="col-md-12">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <strong class="card-title"><h2 align="center">All Sessions</h2></strong>
-                                    </div>
-                                    <div class="card-body">
-                                        <table id="bootstrap-data-table" class="table table-hover table-striped table-bordered">
-                                            <thead>
-                                                <tr>
-                                                    <th>#</th>
-                                                    <th>Session</th>
-                                                    <th>Status</th>
-                                                    <th>Make Active</th>
-                                                    <th>Edit</th>
-                                                    <th>Delete</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <?php
-                                                $ret = mysqli_query($conn, "SELECT * FROM session");
-                                                $cnt = 1;
-                                                while ($row = mysqli_fetch_array($ret)) {
-                                                ?>
-                                                <tr>
-                                                    <td><?php echo $cnt;?></td>
-                                                    <td><?php echo $row['sessionName'];?></td>
-                                                    <td><?php echo $row['isActive'] == 1 ? "Active" : "Inactive";?></td>
-                                                    <td><a href="../php/activateSession.php?activate_id=<?php echo $row['session_id'];?>" title="Activate Session"><i class="fa fa-check fa-1x"></i></a></td>
-                                                    <td><a href="editSession.php?edit_id=<?php echo $row['session_id'];?>" title="Edit Session Details"><i class="fa fa-edit fa-1x"></i></a></td>
-                                                    <td><a onclick="return confirm('Are you sure you want to delete?')" href="../php/deleteSession.php?del_id=<?php echo $row['session_id'];?>" title="Delete Session"><i class="fa fa-trash fa-1x"></i></a></td>
-                                                </tr>
-                                                <?php 
-                                                $cnt++;
-                                                } ?>
-                                            </tbody>
-                                        </table>
-                                    </div>
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <strong class="card-title"><h2 align="center">All Sessions</h2></strong>
+                                </div>
+                                <div class="card-body">
+                                    <table id="bootstrap-data-table" class="table table-hover table-striped table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Session</th>
+                                                <th>Status</th>
+                                                <th>Make Active</th>
+                                                <th>Edit</th>
+                                                <th>Delete</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php
+                                            $ret = mysqli_query($conn, "SELECT * FROM session");
+                                            $cnt = 1;
+                                            while ($row = mysqli_fetch_array($ret)) {
+                                            ?>
+                                            <tr>
+                                                <td><?php echo $cnt;?></td>
+                                                <td><?php echo $row['sessionName'];?></td>
+                                                <td><?php echo $row['isActive'] == 1 ? "Active" : "Inactive";?></td>
+                                                <td><a href="../php/activateSession.php?activate_id=<?php echo $row['session_id'];?>" title="Activate Session"><i class="fa fa-check fa-1x"></i></a></td>
+                                                <td><a href="editSession.php?edit_id=<?php echo $row['session_id'];?>" title="Edit Session Details"><i class="fa fa-edit fa-1x"></i></a></td>
+                                                <td><a onclick="return confirm('Are you sure you want to delete?')" href="../php/deleteSession.php?del_id=<?php echo $row['session_id'];?>" title="Delete Session"><i class="fa fa-trash fa-1x"></i></a></td>
+                                            </tr>
+                                            <?php 
+                                            $cnt++;
+                                            } ?>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
@@ -295,14 +285,14 @@ $profileImagePath = '../php/images/' . ($staffData['image'] ?? 'default.png');
         });
 
         $(document).ready(function() {
-        $('#bootstrap-data-table').DataTable({
-            "pageLength": 10,
-            "lengthMenu": [10, 20, 50, -1],
-            "pagingType": "full_numbers",
-            "searching": true,
-            "info": true
+            $('#bootstrap-data-table').DataTable({
+                "pageLength": 10,
+                "lengthMenu": [10, 20, 50, -1],
+                "pagingType": "full_numbers",
+                "searching": true,
+                "info": true
+            });
         });
-    });
     </script>
 </body>
 </html>
