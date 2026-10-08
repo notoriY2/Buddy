@@ -48,12 +48,11 @@ if (isset($_POST['submit'])) {
 // Fetch the staff image
 $queryStaffImage = "SELECT image FROM staff WHERE staff_id = ?";
 $stmt = $conn->prepare($queryStaffImage);
-$stmt->bind_param('i', $staffId);
+$stmt->bind_param('i', $staff_id);   // <-- was $staffId
 $stmt->execute();
 $result = $stmt->get_result();
 $staffData = $result->fetch_assoc();
 
-// Set the path for the profile image
 $profileImagePath = '../php/images/' . ($staffData['image'] ?? 'default.png');
 ?>
 
